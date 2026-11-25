@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AYT Halal - Remote Print (aytlidergroup/PRINT)</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: #2c3e50;
+      color: #ecf0f1;
+      display: flex;
+      justify-content: center;
+      padding: 25px 15px;
+      margin: 0;
+    }
+    .card {
+      background: #34495e;
+      width: 100%;
+      max-width: 460px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+    .header {
+      background: #1a5276;
+      padding: 18px;
+      text-align: center;
+    }
+    .header h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+    .header p {
+      margin: 5px 0 0;
+      font-size: 12px;
+      color: #d6eaf8;
+    }
+    .body {
+      padding: 20px;
+    }
+    .field {
+      margin-bottom: 14px;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      font-size: 14px;
+      color: #2c3e50;
+      background: #ffffff;
+    }
+    button {
+      width: 100%;
+      padding: 13px;
+      background: #27ae60;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    button:hover {
+      background: #219a52;
+    }
+    button:disabled {
+      background: #7f8c8d;
+      cursor: not-allowed;
+    }
+    .status {
+      margin-top: 14px;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 13px;
+      display: none;
+      text-align: center;
+      word-break: break-word;
+    }
+    .ok {
+      background: #1e8449;
+      display: block;
+    }
+    .err {
+      background: #922b21;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <h2>AYT HALAL MEAT PROVIDER</h2>
+      <p>Remote Label Print (80×130 mm) • aytlidergroup/PRINT</p>
+    </div>
+    <div class="body">
+      <div class="field">
+        <label for="name">📦 Product Name</label>
+        <input type="text" id="name" placeholder="e.g. Beef Steak" required />
+      </div>
+      <div class="field">
+        <label for="mfgDate">📅 Production Date</label>
+        <input type="date" id="mfgDate" required />
+      </div>
+      <div class="field">
+        <label for="expDate">⏰ Expiry Date</label>
+        <input type="date" id="expDate" required />
+      </div>
+      <div class="field">
+        <label for="lotNumber">🔢 LOT Number</label>
+        <input type="text" id="lotNumber" placeholder="e.g. LOT-2026-01" required />
+      </div>
+      <div class="field">
+        <label for="copies">🖨️ Number of Copies</label>
+        <input type="number" id="copies" value="1" min="1" required />
+      </div>
+
+      <button id="printBtn" onclick="sendPrintToGitHub()">🖨️ SEND TO PRINT</button>
+      <div id="statusBox" class="status"></div>
+    </div>
+  </div>
+
+  <script>
+    const GITHUB_OWNER = "aytlidergroup";
+    const GITHUB_REPO = "PRINT";
+    const GITHUB_TOKEN = "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";
+    const FILE_PATH = "print_queue.json";
+
+    function formatDateDDMMYYYY(isoDate) {
+      const [y, m, d] = isoDate.split("-");
+      return `${d}.${m}.${y}`;
+    }
+
+    function toBase64Utf8(str) {
+      const bytes = new TextEncoder().encode(str);
+      let bin = "";
+      for (let i = 0; i < bytes.length; i++) {
+        bin += String.fromCharCode(bytes[i]);
+      }
+      return btoa(bin);
+    }
+
+    function fromBase64Utf8(b64) {
+      const bin = atob(b64.replace(/\n/g, ""));
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) {
+        bytes[i] = bin.charCodeAt(i);
+      }
+      return new TextDecoder().decode(bytes);
+    }
+
+    async function sendPrintToGitHub() {
+      const btn = document.getElementById("printBtn");
+      const statusBox = document.getElementById("statusBox");
+
+      const name = document.getElementById("name").value.trim();
+      const mfgRaw = document.getElementById("mfgDate").value;
+      const expRaw = document.getElementById("expDate").value;
+      const lot = document.getElementById("lotNumber").value.trim();
+      const copies = parseInt(document.getElementById("copies").value, 10);
+
+      if (!name || !mfgRaw || !expRaw || !lot || !copies || copies < 1) {
+        statusBox.className = "status err";
+        statusBox.textContent = "Please fill in all fields properly.";
+        return;
+      }
+
+      btn.disabled = true;
+      statusBox.style.display = "none";
+
+      const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${FILE_PATH}`;
+      const headers = {
+        "Authorization": `Bearer ${GITHUB_TOKEN}`,
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json"
+      };
+
+      try {
+        let items = [];
+        let sha = null;
+
+        const getRes = await fetch(apiUrl, { headers });
+        if (getRes.ok) {
+          const fileData = await getRes.json();
+          sha = fileData.sha;
+          const decoded = fromBase64Utf8(fileData.content).trim();
+          items = decoded ? JSON.parse(decoded) : [];
+        } else if (getRes.status !== 404) {
+          throw new Error(`GitHub read failed (HTTP ${getRes.status})`);
+        }
+
+        items.push({
+          id: Date.now(),
+          name: name,
+          mfg_date: formatDateDDMMYYYY(mfgRaw),
+          exp_date: formatDateDDMMYYYY(expRaw),
+          lot_number: lot,
+          copies: copies,
+          status: "PENDING"
+        });
+
+        const payload = {
+          message: `Add print job: ${name} (${lot})`,
+          content: toBase64Utf8(JSON.stringify(items, null, 2)),
+          ...(sha ? { sha } : {})
+        };
+
+        const putRes = await fetch(apiUrl, {
+          method: "PUT",
+          headers,
+          body: JSON.stringify(payload)
+        });
+
+        if (!putRes.ok) {
+          const errJson = await putRes.json().catch(() => ({}));
+          throw new Error(errJson.message || `GitHub write failed (HTTP ${putRes.status})`);
+        }
+
+        statusBox.className = "status ok";
+        statusBox.textContent = "✅ Sent to print queue! Printer will print shortly.";
+      } catch (err) {
+        statusBox.className = "status err";
+        statusBox.textContent = "❌ " + err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
