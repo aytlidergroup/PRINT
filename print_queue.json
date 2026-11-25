@@ -25,5 +25,14 @@
     "lot_number": "47",
     "copies": 1,
     "status": "PRINTED"
+  },
+  {
+    "id": 1795605026629,
+    "name": "aa",
+    "mfg_date": "25.11.2026",
+    "exp_date": "25.11.2027",
+    "lot_number": "47",
+    "copies": 1,
+    "status": "PENDING"
   }
 ]
