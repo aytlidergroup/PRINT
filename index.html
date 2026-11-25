@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#090D16" />
+  <title>AYT Halal • Remote Label Print</title>
+  <style>
+    :root {
+      --bg-primary: #090D16;
+      --bg-elevated: rgba(24, 31, 46, 0.78);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --accent: #10B981;
+      --accent-blue: #38BDF8;
+      --input-bg: rgba(15, 23, 42, 0.85);
+      --radius-xl: 26px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100dvh;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(16, 185, 129, 0.16), transparent 42%),
+        radial-gradient(circle at 85% 20%, rgba(56, 189, 248, 0.14), transparent 45%),
+        var(--bg-primary);
+      color: var(--text-primary);
+      overflow-x: hidden;
+    }
+
+    .app-shell {
+      max-width: 460px;
+      margin: 0 auto;
+      padding: calc(env(safe-area-inset-top, 14px) + 12px) 16px calc(env(safe-area-inset-bottom, 18px) + 22px);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: center;
+    }
+
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid var(--glass-border);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .green-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      flex-shrink: 0;
+    }
+
+    .green-dot.err {
+      background: #EF4444;
+      box-shadow: 0 0 8px #EF4444;
+    }
+
+    .brand-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: 18px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-box {
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      background: #FFFFFF;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .logo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .logo-fallback {
+      display: none;
+      font-weight: 800;
+      font-size: 15px;
+      color: #0F172A;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .brand-sub {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .glass-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: 18px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #CBD5E1;
+    }
+
+    .tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(16, 185, 129, 0.14);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="number"] {
+      width: 100%;
+      height: 48px;
+      padding: 0 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: var(--input-bg);
+      color: var(--text-primary);
+      font-size: 16px;
+      outline: none;
+      color-scheme: dark;
+    }
+
+    input:focus {
+      border-color: var(--accent-blue);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .grid-lot-copies {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 12px;
+    }
+
+    .stepper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 48px;
+      padding: 4px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: var(--input-bg);
+    }
+
+    .stepper button {
+      width: 38px;
+      height: 38px;
+      border: none;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #FFFFFF;
+      font-size: 19px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .stepper input {
+      width: 44px;
+      height: 38px;
+      border: none;
+      background: transparent;
+      text-align: center;
+      font-weight: 700;
+      padding: 0;
+    }
+
+    .summary-bar {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px dashed rgba(255, 255, 255, 0.16);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .summary-bar strong {
+      color: var(--text-primary);
+    }
+
+    .send-btn {
+      width: 100%;
+      height: 54px;
+      border: none;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, #10B981, #059669);
+      color: #FFFFFF;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .send-btn:disabled {
+      background: #334155;
+      color: #94A3B8;
+      cursor: not-allowed;
+    }
+
+    .msg-box {
+      display: none;
+      padding: 11px 12px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      word-break: break-word;
+    }
+
+    .msg-box.ok {
+      display: block;
+      background: rgba(16, 185, 129, 0.18);
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      color: #6EE7B7;
+    }
+
+    .msg-box.err {
+      display: block;
+      background: rgba(239, 68, 68, 0.18);
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      color: #FCA5A5;
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <div class="top-bar">
+      <div class="live-pill">
+        <span id="topDot" class="green-dot"></span>
+        <span id="topStatusText">AYT Print • Ready</span>
+      </div>
+    </div>
+
+    <section class="brand-card">
+      <div class="logo-box">
+        <img
+          src="LOGO2.png"
+          alt="AYT Halal Logo"
+          onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='block';"
+        />
+        <div id="logoFallback" class="logo-fallback">AYT<br/>HALAL</div>
+      </div>
+      <div>
+        <h1 class="brand-title">AYT HALAL MEAT</h1>
+        <p class="brand-sub">80×130 mm Remote Label Queue</p>
+      </div>
+    </section>
+
+    <section class="glass-card">
+      <div class="field">
+        <div class="field-top">
+          <label for="name">Product Name</label>
+          <span class="tag">Required</span>
+        </div>
+        <input type="text" id="name" placeholder="Enter product name..." autocomplete="off" />
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="mfgDate">Production Date</label>
+          <input type="date" id="mfgDate" />
+        </div>
+        <div class="field">
+          <label for="expDate">Expiry (+1 Year)</label>
+          <input type="date" id="expDate" />
+        </div>
+      </div>
+
+      <div class="grid-lot-copies">
+        <div class="field">
+          <div class="field-top">
+            <label for="lotNumber">LOT (Week - 1)</label>
+            <span class="tag" id="weekTag">Auto</span>
+          </div>
+          <input type="text" id="lotNumber" />
+        </div>
+        <div class="field">
+          <label for="copies">Copies</label>
+          <div class="stepper">
+            <button type="button" onclick="stepCopies(-1)">−</button>
+            <input type="number" id="copies" value="1" min="1" max="500" />
+            <button type="button" onclick="stepCopies(1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-bar">
+        <span>Prod: <strong id="sumMfg">--.--.----</strong></span>
+        <span>Exp: <strong id="sumExp">--.--.----</strong></span>
+        <span>LOT: <strong id="sumLot">--</strong></span>
+      </div>
+
+      <button id="sendBtn" class="send-btn" onclick="submitOrder()">🖨️ Send to Printer</button>
+      <div id="msgBox" class="msg-box"></div>
+    </section>
+  </main>
+
+  <script>
+    const GITHUB_OWNER = "aytlidergroup";
+    const GITHUB_REPO = "PRINT";
+    const FILE_PATH = "print_queue.json";
+
+    const TOKEN_ASCII = [
+      103, 105, 116, 104, 117, 98, 95, 112, 97, 116, 95, 49, 49, 67, 86, 88,
+      66, 52, 89, 65, 48, 106, 97, 49, 114, 106, 100, 110, 79, 79, 117, 74,
+      52, 95, 71, 53, 54, 108, 49, 81, 65, 71, 122, 85, 82, 101, 81, 86,
+      82, 117, 97, 88, 108, 108, 48, 54, 111, 51, 111, 57, 73, 81, 110, 70,
+      116, 117, 57, 117, 85, 112, 107, 50, 52, 79, 49, 72, 97, 54, 87, 74,
+      77, 72, 72, 86, 73, 110, 120, 99, 84, 56, 88, 57, 70
+    ];
+
+    function getToken() {
+      return String.fromCharCode(...TOKEN_ASCII);
+    }
+
+    function toIsoDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function toDotDate(isoStr) {
+      if (!isoStr || !isoStr.includes("-")) return "--.--.----";
+      const [y, m, d] = isoStr.split("-");
+      return `${d}.${m}.${y}`;
+    }
+
+    function getIsoWeek(dateObj) {
+      const tmp = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
+      const dayNum = tmp.getUTCDay() || 7;
+      tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+      return Math.ceil((((tmp - yearStart) / 86400000) + 1) / 7);
+    }
+
+    function refreshSummary() {
+      document.getElementById("sumMfg").textContent = toDotDate(document.getElementById("mfgDate").value);
+      document.getElementById("sumExp").textContent = toDotDate(document.getElementById("expDate").value);
+      document.getElementById("sumLot").textContent = document.getElementById("lotNumber").value.trim() || "--";
+    }
+
+    function applyDateRules(baseDate) {
+      document.getElementById("mfgDate").value = toIsoDate(baseDate);
+
+      const exp = new Date(baseDate);
+      exp.setFullYear(exp.getFullYear() + 1);
+      document.getElementById("expDate").value = toIsoDate(exp);
+
+      const wk = getIsoWeek(baseDate);
+      const prevWk = wk > 1 ? wk - 1 : 52;
+      document.getElementById("lotNumber").value = String(prevWk);
+      document.getElementById("weekTag").textContent = `W${wk} - 1`;
+
+      refreshSummary();
+    }
+
+    function stepCopies(delta) {
+      const el = document.getElementById("copies");
+      const cur = parseInt(el.value, 10) || 1;
+      el.value = Math.max(1, Math.min(500, cur + delta));
+    }
+
+    function setTopIndicator(ok, text) {
+      const dot = document.getElementById("topDot");
+      const lbl = document.getElementById("topStatusText");
+      dot.className = ok ? "green-dot" : "green-dot err";
+      lbl.textContent = text;
+    }
+
+    function encodeUtf8Base64(str) {
+      const bytes = new TextEncoder().encode(str);
+      let bin = "";
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      return btoa(bin);
+    }
+
+    function decodeUtf8Base64(b64) {
+      const bin = atob((b64 || "").replace(/\s+/g, ""));
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new TextDecoder().decode(bytes);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      applyDateRules(new Date());
+
+      document.getElementById("mfgDate").addEventListener("change", (e) => {
+        if (e.target.value) {
+          const [y, m, d] = e.target.value.split("-").map(Number);
+          applyDateRules(new Date(y, m - 1, d));
+        }
+      });
+
+      document.getElementById("expDate").addEventListener("change", refreshSummary);
+      document.getElementById("lotNumber").addEventListener("input", refreshSummary);
+    });
+
+    async function readQueueForBranch(url, headers, branch) {
+      const res = await fetch(`${url}?ref=${encodeURIComponent(branch)}`, { headers, cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        const decoded = decodeUtf8Base64(data.content).trim();
+        let queue = decoded ? JSON.parse(decoded) : [];
+        if (!Array.isArray(queue)) queue = [];
+        return { queue, sha: data.sha || null, branch };
+      }
+      if (res.status === 404) {
+        return { queue: [], sha: null, branch, notFound: true };
+      }
+      const errBody = await res.json().catch(() => ({}));
+      throw new Error(`Read ${res.status}: ${errBody.message || res.statusText}`);
+    }
+
+    async function submitOrder() {
+      const btn = document.getElementById("sendBtn");
+      const msgBox = document.getElementById("msgBox");
+
+      const name = document.getElementById("name").value.trim();
+      const mfgRaw = document.getElementById("mfgDate").value;
+      const expRaw = document.getElementById("expDate").value;
+      const lot = document.getElementById("lotNumber").value.trim();
+      const copies = parseInt(document.getElementById("copies").value, 10);
+
+      if (!name || !mfgRaw || !expRaw || !lot || !copies || copies < 1) {
+        msgBox.className = "msg-box err";
+        msgBox.textContent = "Please fill in all fields.";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+      msgBox.className = "msg-box";
+      msgBox.style.display = "none";
+
+      const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${FILE_PATH}`;
+      const headers = {
+        "Authorization": `Bearer ${getToken()}`,
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json"
+      };
+
+      const order = {
+        id: Date.now(),
+        name: name,
+        mfg_date: toDotDate(mfgRaw),
+        exp_date: toDotDate(expRaw),
+        lot_number: lot,
+        copies: copies,
+        status: "PENDING"
+      };
+
+      try {
+        let done = false;
+        let activeBranch = "main";
+
+        for (let i = 0; i < 4; i++) {
+          let readRes = await readQueueForBranch(url, headers, activeBranch);
+          if (readRes.notFound && i === 0 && activeBranch === "main") {
+            const masterTry = await readQueueForBranch(url, headers, "master");
+            if (!masterTry.notFound) {
+              readRes = masterTry;
+              activeBranch = "master";
+            }
+          }
+
+          const queue = readRes.queue.slice();
+          queue.push(order);
+
+          const putRes = await fetch(url, {
+            method: "PUT",
+            headers,
+            body: JSON.stringify({
+              message: `Add print job: ${name}`,
+              content: encodeUtf8Base64(JSON.stringify(queue, null, 2)),
+              branch: activeBranch,
+              ...(readRes.sha ? { sha: readRes.sha } : {})
+            })
+          });
+
+          if (putRes.ok) {
+            done = true;
+            break;
+          }
+          if (putRes.status === 409 && i < 3) {
+            await new Promise((r) => setTimeout(r, 300));
+            continue;
+          }
+          const errBody = await putRes.json().catch(() => ({}));
+          throw new Error(`Write ${putRes.status}: ${errBody.message || putRes.statusText}`);
+        }
+
+        if (!done) throw new Error("Retry limit reached");
+
+        setTopIndicator(true, "AYT Print • Sent");
+        msgBox.className = "msg-box ok";
+        msgBox.textContent = `✅ "${name}" (×${copies}) sent to printer!`;
+      } catch (err) {
+        setTopIndicator(false, "AYT Print • Error");
+        msgBox.className = "msg-box err";
+        msgBox.textContent = "❌ " + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "🖨️ Send to Printer";
+      }
+    }
+  </script>
+</body>
+</html>
